@@ -1,0 +1,5 @@
+frame,n_human_train,pearson_r,spearman_rho,mean_shift
+technical,88,0.8205,0.7990,-0.2368
+political,87,0.9257,0.9314,0.0485
+development,85,0.6181,0.5811,0.1149
+sustainability,99,0.6841,0.7154,-0.0316

@@ -1,0 +1,509 @@
+% =============================================================================
+% Paper: Measuring the Discursive Geography of Turkey's Post-2023 Earthquake
+% Reconstruction
+% Template: CSI Press Cognitive Security Journal (IEEEtran-derived)
+% =============================================================================
+
+\documentclass[12pt, journal]{IEEEtran}
+
+\usepackage[utf8]{inputenc}     % UTF-8 input (Turkish characters)
+\usepackage[T1]{fontenc}        % proper hyphenation and Turkish chars
+\usepackage{lipsum}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{orcidlink}
+\usepackage{stfloats}
+\usepackage[caption=false,font=footnotesize]{subfig}
+
+\bibliographystyle{IEEEtran}
+
+\begin{document}
+
+
+
+\title{Measuring the Discursive Landscape of Turkey's 2023 Earthquake  \\
+\textit{A Computational Text Analysis of Official Discourse Across Two Electoral Cycles}}
+
+\author{\IEEEauthorblockN{Mehmet Bağdınlı\IEEEauthorrefmark{1}~\orcidlink{0000-0000-0000-0000}}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Koç University, İstanbul, Türkiye}
+\vspace{4pt}
+\IEEEauthorblockA{\footnotesize Email: \IEEEauthorrefmark{1}mbagdinli25@ku.edu.tr}
+\thanks{\hrule \vspace{4pt} \noindent
+\vspace{3pt} \\
+Corresponding Author Email: \href{mailto:mbagdinli25@ku.edu.tr}{mbagdinli25@ku.edu.tr} \vspace{3pt}}%
+}
+
+\IEEEaftertitletext{\vspace{-1\baselineskip}\noindent\begin{abstract}
+The Kahramanmara\c{s} earthquakes of February 6, 2023 triggered one of the largest reconstruction processes in modern Turkish history, which unfolded over two consecutive electoral cycles. This paper asks whether official discourse on reconstruction varied systematically across provinces and electoral periods, and whether the relative salience of four framings:technical resilience, political mobilisation, developmental transformation, and sustainability can be measured at scale by using NLP methods. I construct a corpus of 2,139 official Turkish texts (February 2023-December 2024) collected from the Presidency, the Ministry of Environment, AFAD, three provincial governorates (Hatay, Ad\i yaman, Kahramanmara\c{s}), and two metropolitan municipalities. A subset of 300 documents is annotated on a four-point ordinal scale for each frame through a hybrid procedure that combines double human coding, codebook reconciliation, and LLM annotation with manual review of high-risk predictions. Two parallel models: a TF-IDF + LinearSVR baseline using character n-grams and inverse-frequency weighting, and a fine-tuned DistilBERTurk regressor with weighted MSE loss are evaluated under five-fold cross-validation. The two models converge in their corpus-level predictions (Pearson r between 0.69 and 0.93), which supports the view that the four frames capture genuine semantic structure rather than model-specific artefacts. Results show that political framing peaks sharply during the 2024 local-election campaign, technical framing is concentrated in the immediate post-earthquake months, and a sustained but minor sustainability register exists. A composite Politicization Index---the monthly ratio of mean political to mean technical framing---peaks during the 2024 local-election period at 2.63 in April 2024 (95\% bootstrap CI [2.00, 3.54]), nearly three times its February-2023 post-earthquake baseline of 0.95 (CI [0.84, 1.07]).
+\end{abstract}
+\noindent\begin{IEEEkeywords}
+Computational text analysis, political discourse, disaster reconstruction, Turkish NLP, frame analysis
+\end{IEEEkeywords}
+\vspace{1\baselineskip}}
+
+
+
+\maketitle
+
+% =============================================================================
+\section{Introduction}
+% =============================================================================
+\IEEEPARstart{T}{he} earthquakes that hit southeastern Turkey on February 6, 2023 killed more than fifty thousand people, displaced millions, and damaged or destroyed hundreds of thousands of buildings across eleven provinces. The reconstruction effort that followed is one of the largest publicly led building programmes in the country's recent history and a deeply political one. Within four months after the disaster, Turkey held a presidential and parliamentary election; within fourteen months, a nationwide local election. Reconstruction unfolded in continuous overlap with these contests, and was framed by official actors as an urgent technical necessity, a national mobilisation, a developmental transformation, and more occasionally as a sustainability project.
+
+This paper takes that framing seriously as data. The central empirical question is whether the discursive architecture of post-disaster reconstruction varies systematically across provinces and across the electoral cycle, and whether this variation tracks features of political competition rather than the technical contours of damage. Three more specific questions structure the analysis: (i) which interpretive frames dominate official communication and how their relative weights change across the electoral cycle; (ii) whether the three most affected provinces show different discursive profiles correlated with the partisan identity of local government and the source institution; and (iii) whether two methodologically distinct text-classification approaches - a sparse interpretable TF-IDF baseline and a fine-tuned Turkish transformer - produce convergent measurements of frame intensity, so that subsequent analyses are not dependent on a single modelling choice.
+
+\IEEEpubidadjcol The contribution of this study is threefold. Substantively, the paper provides one of the first systematic measurements of the discursive geography of Turkey's post-2023 reconstruction. Methodologically, it documents a hybrid annotation pipeline that addresses the small-corpus problem typical of country-specific political text projects. Technically, it shows that on a 300-document Turkish training set with substantial class imbalance, a carefully engineered TF-IDF baseline outperforms a fine-tuned BERTurk-base model, and that a smaller distilled transformer recovers most of the larger model's performance at a fraction of the parameter count. The analysis is descriptive and correlational; the planned panel-data extension will link the discourse intensities measured here to provincial investment outcomes.
+
+% =============================================================================
+\section{Literature Review}
+% =============================================================================
+Three strands of literature motivate the design of this study. Distributive-politics work \cite{cox1986electoral, dixit1996determinants} demonstrates that incumbent governments rarely allocate resources purely on technocratic criteria, and disaster-reconstruction studies covering Hurricane Katrina, the 2001 Bhuj earthquake, and L'Aquila in 2009 confirm that crises restructure rather than suspend politics. Most of these works use material proxies (investment shares, vote margins) and read the discursive layer qualitatively. This paper inverts this approach: it treats the discursive layer as the dependent variable to be measured at scale before any link to material allocations is attempted.
+
+Discursive institutionalism \cite{schmidt2008discursive, schmidt2010taking} provides the conceptual scaffolding by treating political language as an institutional resource that legitimises and re-orders policy. The four frames used here draw on this tradition and on the broader policy-framing literature originating from Entman \cite{entman1993framing}. Technical resilience locates authority in expertise (engineering vocabulary, regulatory codes, damage-assessment language); political mobilisation in elected office and the partisan machine (leadership, party identity, electoral commitments); developmental transformation in the technocratic developmental state (investment, urban renewal, large-scale projects); and sustainability in international and inter-generational normative claims (green building, climate resilience). These registers are not mutually exclusive, and the analysis treats their salience as a multidimensional intensity rather than a categorical assignment.
+
+Methodologically, this project sits in the text-as-data literature in political science \cite{grimmer2013text, grimmer2022text}. Two Turkish-language contributions are particularly relevant: H\"urriyeto\u{g}lu et al.~\cite{hurriyetoglu2020cross} demonstrate that domain-specific Turkish corpora can support reliable supervised learning when annotation is structured around an explicit codebook, and Y\"or\"uk et al.~\cite{yoruk2022random} argue that keyword-filtered corpora introduce systematic selection bias and that random sampling followed by classifier-based filtering produces more generalisable results---a design principle that is followed here. The choice of the model family draws on BERTurk and DistilBERTurk \cite{schweter2020berturk} as the standard pretrained Turkish transformers.
+
+% =============================================================================
+\section{Data}
+% =============================================================================
+\subsection{Sources and Collection Strategy}
+The corpus consists of 2,139 Turkish-language official texts produced between February 1, 2023 and December 31, 2024, collected from seven institutional sources. Each one was harvested with a separately written scraper, since no two source websites share a content-management system, schema, or pagination logic.
+
+The Presidency of the Republic (TCCB) publishes presidential speeches on a dedicated archive; its scraper iterates through the paginated speech index and follows each item link to extract speech body, delivery date, title, and canonical URL. The Ministry of Environment, Urbanisation and Climate Change (CSB) publishes ministerial press releases on its corporate news section under a more conventional WordPress-style listing. AFAD publishes operational announcements and situation reports on its national-news archive. The three provincial governorships of Hatay, Ad\i yaman, and Kahramanmara\c{s} each maintain their own news pages with substantively different layouts and date conventions; the Ad\i yaman and Kahramanmara\c{s} governorate scrapers required a second pass after the initial harvest to back-fill missing full-text fields, since the listing pages contained only summary text. The metropolitan municipalities of Hatay (HBB, CHP-controlled after the 2024 local election) and Kahramanmara\c{s} (KBB, AKP-controlled throughout) supply municipal news and project announcements; the HBB scraper especially needed an additional date back-fill pass since the publication date is stored on the article page rather than the listing.
+
+The output of these seven scrapers is a set of seven source-specific CSV files, each one with its own column conventions, which a consolidation script (\texttt{build\_master\_corpus.py}) merges into a unified five-column schema (id, source, date, url, text). Following Y\"or\"uk et al.~\cite{yoruk2022random}, no thematic pre-filter was applied at scrape time; the raw harvest produced 10,218 records before any filtering or deduplication.
+
+\subsection{Three-Stage Filter Pipeline}
+The 10,218-record raw harvest is converted into the 2,139-document analytic dataset through four passes: a preprocessing pass, a thematic keyword pass, a geographic assignment pass, and a temporal-period assignment pass.
+
+The preprocessing pass operates in three steps. First, exact duplicates are removed by using a strict string match on the cleaned text field, which eliminates routine cross-posting where the same press release appears verbatim on multiple official channels. Second, very short records (fewer than 50 whitespace-separated tokens) are dropped, removing single-line announcements (``Say\i n Cumhurba\c{s}kan\i m\i z bug\"un Hatay'da incelemelerde bulundu''), photo captions, and metadata-only entries. Third, near-duplicates that survive exact-match deduplication are consolidated using MinHash with locality-sensitive hashing at a Jaccard similarity threshold of 0.85. Near-duplicates appear frequently because Turkish official communications use long ceremonial preambles (``Allah'\i n selam\i, rahmeti ve bereketi \"uzerinize olsun\ldots'') that are reused across speeches; without the MinHash pass, two substantively distinct speeches sharing such a preamble can register as different documents while inflating the apparent prevalence of the shared opening.
+
+The thematic keyword pass applies a list of 26 earthquake-relevant Turkish terms case-insensitively against the full text, and combines core disaster vocabulary (\textit{deprem, enkaz, hasar, y\i k\i m, depremzede, 6 \c{S}ubat, kahramanmara\c{s} depremi}), institutional and operational terms (\textit{AFAD, kurtarma, tahliye, acil durum, \c{c}ad\i r kent, bar\i nak, konteyner, prefabrik}), and reconstruction vocabulary (\textit{kal\i c\i\ konut, ge\c{c}ici bar\i nma, yeniden yap\i m, yeniden yap\i lanma, d\"on\"u\c{s}\"um, kentsel d\"on\"u\c{s}\"um, TOK\.{I}, in\c{s}aat, altyap\i}). Following Y\"or\"uk et al.~\cite{yoruk2022random}, this pass is treated as a conservative lower bound on earthquake relevance rather than a definitive selection.
+
+The geographic-assignment pass classifies each surviving text into one of four geographic scales (Hatay, Ad\i yaman, Kahramanmara\c{s}, or ``national'') by using toponym frequency rather than mere presence. For each text, the script counts occurrences of district and municipality names associated with each focal province---for Hatay: Antakya, \.{I}skenderun, Samanda\u{g}, Defne, K\i r\i khan, Reyhanl\i, Arsuz, D\"ortyol, Erzin, Payas; for Kahramanmara\c{s}: Onikis\c{s}ubat, Dulkadiro\u{g}lu, Elbistan, Af\c{s}in, G\"oksun, Pazarc\i k, T\"urko\u{g}lu; for Ad\i yaman: Kahta, Besni, G\"olba\c{s}\i, Samsat, Tut, Sincik, Gerger, \c{C}elikhan---and assigns the text to the province with the highest cumulative count. This rule is necessary rather than cosmetic, because national sources routinely mention all three provinces in a single statement, and a simple presence-based rule would over-assign such texts to whichever province happens to appear first. Texts that match no toponym are assigned ``national.''
+
+The temporal-period assignment is the simplest of the four passes: every text receives one of five electoral-period labels based on its publication date. The five periods are the immediate post-earthquake period (Feb 6 - Apr 30, 2023), the presidential election campaign (May 1-31, 2023), the inter-election transition (Jun 1, 2023 - Jan 31, 2024), the local-election campaign (Feb 1 - Mar 31, 2024), and the post-local-election period (Apr 1 - Dec 31, 2024).
+
+\subsection{Final Dataset}
+The dataset that results from this pipeline contains 2,139 documents, which is about 21\% of the raw harvest. Table \ref{table_corpus} reports the cross-tabulation of the analytic corpus by electoral period and geographic scale.
+
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Distribution of analytic corpus by electoral period and geographic scale.}
+\label{table_corpus}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Electoral period} & \textbf{National} & \textbf{Hatay} & \textbf{K.mara\c{s}} & \textbf{Ad\i yaman} & \textbf{Total} \\
+\hline\hline
+1. Post-earthquake (Feb-Apr 2023) & 253 & 11 & 207 & 4 & 475 \\
+\hline
+2. Presidential campaign (May 2023) & 89 & 13 & 76 & 0 & 178 \\
+\hline
+3. Inter-election (Jun 2023 - Jan 2024) & 309 & 132 & 328 & 22 & 791 \\
+\hline
+4. Local-election campaign (Feb-Mar 2024) & 79 & 30 & 32 & 1 & 142 \\
+\hline
+5. Post-local-election (Apr-Dec 2024) & 87 & 345 & 101 & 20 & 553 \\
+\hline\hline
+\textbf{Total} & \textbf{817} & \textbf{531} & \textbf{744} & \textbf{47} & \textbf{2,139} \\
+\hline
+\end{tabular}
+\end{table*}
+
+Three patterns are substantively important. Kahramanmara\c{s} contributes heavily in the post-earthquake (n = 207) and inter-election (n = 328) periods but drops sharply in the local-election campaign (n = 32). Hatay shows the opposite trajectory: low counts early (11, 13, 132) give way to a substantial expansion in the post-local-election period (n = 345), which coincides with the change in metropolitan control to the CHP. This is the quantitative basis for the discursive shift that is discussed in Section VI. The Ad\i yaman row is thin across every period because the Ad\i yaman municipal channel is not yet included in the corpus; this limitation is taken up in Section VII.
+
+From the 2,139-document analytic corpus, a subset of 300 documents was selected for manual annotation through stratified sampling on the cross-tabulation of source institution and electoral period, which ensures that every populous source-by-period combination is represented in the training set. Strata that contained only a small number of documents in the full corpus were retained at their natural proportions rather than over-sampled, on the grounds that over-sampling sparse strata in a small training set risks pulling the model toward patterns it will rarely encounter at deployment time.
+
+% =============================================================================
+\section{Methodology I: Annotation}
+% =============================================================================
+\subsection{Frame Taxonomy and Coding Scheme}
+Each of the 300 annotated documents is scored on four parallel ordinal Likert scales (one per frame), where 0 = absent, 1 = implicit/passing, 2 = salient ($\approx$30--50\% of argumentative weight), and 3 = dominant. A score of 3 is reserved for documents in which the frame is the central rhetorical commitment, and not merely the most frequent vocabulary; a long ministerial speech that lists ten infrastructure projects in passing is not a Development = 3 document if the speech's argumentative core is the AKP's commitment to the disaster region, in which case it would be Political = 3 and Development = 2.
+
+The decision to use a four-point ordinal scale rather than binary presence/absence is theoretically and practically motivated. Theoretically, the four frames are not mutually exclusive: a single presidential address can simultaneously invoke technical-resilience language about ground conditions, political-mobilisation language about national unity, and developmental language about urban renewal at TOK\.{I} scale. A binary scheme would force coders to discard precisely the multidimensional structure that the project is built to measure. The choice between three, four, five, and seven-point scales was made deliberately. Three-point scales (absent, present, dominant) collapse the implicit-versus-salient distinction that turned out to be empirically important for the Technical and Sustainability frames. Five and seven-point scales offer finer gradation in principle but degrade inter-coder reliability sharply: pilot annotation on 20 documents using a five-point scale produced systematic confusion between adjacent levels. The four-point scheme thus represents the practical maximum at which two coders can reliably distinguish all four levels in this corpus.
+
+\subsection{Codebook Construction}
+The codebook is the operational backbone of the annotation phase, and the version that was used in the final round of coding was the product of three iterations. For each frame, the codebook specifies five components: (i) a one-paragraph definition that distinguishes the frame from its closest neighbours, (ii) a list of expected indicators at the lexical and rhetorical levels, (iii) explicit decision rules for boundary cases, (iv) two to three anchor examples drawn from the corpus at each of the four scale levels, and (v) a list of common pitfalls observed during pilot annotation.
+
+The first version was drafted on the basis of the theoretical literature on policy framing, which provides each frame with a working definition and a list of expected indicators (for Technical resilience: engineering vocabulary-\textit{zemin, \c{c}elik, donat\i, mukavemet}; regulatory vocabulary-\textit{y\"onetmelik, deprem y\"onetmeli\u{g}i, hasar tespit}; damage-assessment---\textit{orta hasarl\i, a\u{g}\i r hasarl\i, y\i k\i k}). The first round of coding on 20 pilot documents revealed that the theoretical definitions were necessary but not sufficient. A second version was produced after the pilot, which adds the anchor examples (which proved more useful than abstract definitions in resolving boundary cases) and the explicit decision rules. The third and final version was produced after the first 99 documents had been double-coded and the inter-annotator disagreement on the Development frame was diagnosed.
+
+\subsection{Double Annotation and Inter-Coder Agreement}
+The first 99 documents in the annotation subset were independently double-coded by two annotators (the author and a second coder, both native Turkish speakers with a background in Turkish political discourse), who worked separately and without consultation during the coding itself. Inter-annotator agreement was computed by using both unweighted Cohen's $\kappa$ (which treats all disagreements equally) and quadratic-weighted Cohen's $\kappa$ (which penalises a 0-3 disagreement nine times more heavily than a 0-1 disagreement).
+
+Three of the four frames reached substantial agreement on the first pass. Technical ($\kappa$ = 0.82) and Political ($\kappa$ = 0.84) both crossed the conventional threshold for substantial agreement, which indicates that the codebook definitions for these two frames were operationally clear. The Development frame, by contrast, returned a Cohen's $\kappa$ of 0.48 at the boundary of moderate agreement and well below the threshold acceptable for a primary analytical variable. A face-to-face reconciliation session identified two recurrent confusions: (1) the conflation of small-scale local-infrastructure announcements (single-block commercial works, neighbourhood street paving, individual school-roof repairs) with the broader developmental-vision register - one coder had assigned Development = 2 or 3 to such texts on the basis of their infrastructure vocabulary, while the other had assigned 0 or 1 on the basis that the underlying announcement was substantively narrow; (2) the under-coding of large-scale ministerial speeches whose developmental content was distributed across many sentences rather than concentrated in a single passage. The codebook was revised: a new boundary rule explicitly excluded narrow local-works announcements from the upper levels of the Development scale unless embedded in an explicit transformational frame, and a new anchor example was added to illustrate the diffuse-developmental-spine pattern at Development = 3. The 99 documents were then re-coded under the revised codebook, and Cohen's $\kappa$ for Development rose from 0.48 to 0.81.
+
+\begin{table}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Inter-annotator agreement before and after codebook reconciliation (n = 99).}
+\label{table_kappa}
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Frame} & \textbf{$\kappa$ (r1)} & \textbf{$\kappa$ (r2)} & \textbf{Quad. $\kappa$ (r2)} \\
+\hline\hline
+Technical & 0.82 & 0.82 & 0.93 \\
+\hline
+Political & 0.84 & 0.84 & 0.93 \\
+\hline
+Development & 0.48 & 0.81 & 0.92 \\
+\hline
+Sustainability\textsuperscript{\dag} & 1.00 & 1.00 & 1.00 \\
+\hline
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize \textsuperscript{\dag}Sustainability was scored by deliberative consensus rather than independent double coding (see text); $\kappa = 1.00$ holds by construction and is not an independent inter-coder reliability estimate.}
+\end{table}
+
+The perfect agreement reported for Sustainability requires a separate explanation. Unlike the other three frames, where the two coders worked independently and reconciled disagreements after the fact, the two coders adopted a different procedure for Sustainability from the very first document. Because the frame is rare in the corpus-pilot inspection had established that fewer than 10\% of documents contained any sustainability content-ex-post reconciliation on a frame this sparse would produce essentially no signal: with only a handful of non-zero observations, even a single coder disagreement would distort the $\kappa$ statistic dramatically. The two coders therefore agreed, before the first document was scored, to discuss every Sustainability assignment jointly: both coders read the text, independently formed a score, then immediately compared and discussed until a single agreed score emerged. This produces $\kappa$ = 1.00 by construction; the resulting Sustainability labels should therefore be read as the product of a deliberative consensus procedure rather than as independent dual annotations.
+
+\subsection{Agreement-Based Gold Labels}
+An important methodological decision concerns how to construct a single gold label from two coder annotations on an ordinal scale, and the choice that was made here departs deliberately from common practice. The default approach in many annotation projects taking the arithmetic mean of the two coders' scoreslis conceptually awkward for ordinal data and substantively misleading. The non-integer values that result from averaging do not correspond to any defined level of the codebook scale: a mean of 1.5 between a coder who assigned 1 and a coder who assigned 2 is not ``halfway implicit and halfway salient''it is a number with no operational meaning. More fundamentally, averaging two confident-but-different annotators produces a spurious centrist consensus that erases the very disagreement that is methodologically informative.
+
+The procedure that was adopted here treats agreement and disagreement as substantively different states of evidence and labels them accordingly. Where the two annotators agreed on a frame, the agreed value is recorded as the gold label with provenance \texttt{human\_agreement}. Where they disagreed, the document is flagged for that frame and a working value is assigned by using the conservative minimum of the two scores, with provenance \texttt{human\_disagreement}. The conservative-minimum rule was chosen on three grounds: it is deterministic and reproducible, it errs systematically against false positives (the appropriate direction of error for descriptive analyses where over-claiming a frame's prevalence is a more serious risk than under-claiming it), and it leaves the disagreement-flagged labels visibly identifiable so that downstream analyses can include, exclude, or weight them differently. Each label in the final 300-document dataset carries an explicit \texttt{label\_source} field with one of four values (\texttt{human\_agreement}, \texttt{human\_disagreement}, \texttt{llm\_only}, \texttt{llm\_then\_manual}), which enables provenance-based robustness checks.
+
+\subsection{LLM-Assisted Annotation of the Remaining Subset}
+Coding the remaining 201 documents to the same standard as the first 99 would have required roughly the same coder-hours again. The decision was therefore made to extend the annotation by using a large language model, with the explicit understanding that the resulting labels would be checked for systematic bias and that high-risk LLM predictions would be subjected to manual review. The choice of LLM annotator over alternatives such as a smaller fine-tuned model trained on the 99 human-labelled documents was driven by a sample-size argument: 99 documents are unlikely to support reliable fine-tuning of a smaller transformer for a four-output ordinal-regression task, and the in-context-learning capacity of a frontier model is more likely to recover the codebook's intent from a small number of well-chosen examples.
+
+The model selection itself involved a preliminary experiment. The initial trial used Claude Haiku 4.5, on grounds of cost and throughput. Validation against the 91 held-out \texttt{human\_agreement} documents revealed a systematic over-detection bias on the Technical frame: the Haiku model's mean prediction exceeded the human gold by 0.57 on the 0--3 scale, with the bias concentrated in documents that contained engineering vocabulary in passing but were not substantively about technical resilience. A second trial with Claude Sonnet 4.5 on a 20-document spot check showed substantial reduction in the same bias (Technical mean $\Delta$ = 0.00), and Sonnet 4.5 was retained for the full LLM annotation.
+
+The prompt is built in three layers. The first one is the codebook itself, which includes the per-frame definitions, indicator lists, boundary-case decision rules, and anchor examples. The second is an in-context example pool of eight documents drawn from the \texttt{human\_agreement} subset, manually selected to span the label space across all four frames: at least one zero-baseline document where most frames score 0 (to demonstrate appropriate restraint on lower-level assignments), at least one document scoring 3 on each of the four frames (to demonstrate what a dominant frame looks like in practice), and several intermediate documents to exercise the 1 and 2 levels. Each example is presented as a (text, JSON labels) pair, which mirrors the output format the model is asked to produce. The third layer is a strict JSON output schema with the four frame keys and integer 0-3 values; the model is instructed to produce no commentary outside the JSON block and to refuse to predict values outside the 0-3 range. Sampling is deterministic with temperature = 0.
+
+Validation of the Sonnet 4.5 annotations was performed against 91 held-out \texttt{human\_agreement} documents, with the eight in-context examples used in the prompt excluded from the validation set so that the diagnostics measure generalisation rather than memorisation.
+
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{LLM annotation performance on 91 held-out human-agreement documents (Claude Sonnet 4.5, 8-shot, T = 0).}
+\label{table_llm}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Frame} & \textbf{Exact match} & \textbf{$\pm 1$ tolerance} & \textbf{Cohen's $\kappa$} & \textbf{Quadratic $\kappa$} & \textbf{Mean $\Delta$} \\
+\hline\hline
+Technical & 48.8\% & 92.5\% & 0.25 & 0.64 & $+0.36$ \\
+\hline
+Political & 49.4\% & 92.4\% & 0.30 & 0.70 & $+0.25$ \\
+\hline
+Development & 46.8\% & 87.0\% & 0.26 & 0.47 & $+0.13$ \\
+\hline
+Sustainability & 94.5\% & 98.9\% & 0.53 & 0.83 & $-0.02$ \\
+\hline
+\end{tabular}
+\end{table*}
+
+Three observations are warranted. First, exact-match agreement is moderate at 47-49\% for the three substantively common frames, which on its face would suggest a poor model. The $\pm 1$ tolerance figures, however, reach 87-99\% across all four frames, which means that when the LLM disagrees with the human gold, the disagreement is almost always at an adjacent level rather than a distant one. The model rarely confuses a 0 with a 3---what it does is confuse 1 with 2, and 2 with 3, on the boundary cases where the codebook itself acknowledges genuine ambiguity. Second, the quadratic-weighted $\kappa$ values reflect this directional accuracy (0.64-0.83 for three frames; 0.47 for Development), and Development is also the frame on which the human coders themselves required two rounds of reconciliation. Third, the residual over-detection bias on Technical ($+0.36$) and Political ($+0.25$) is non-trivial: the LLM tends to assign Technical = 1 to documents that contain any engineering or building-related vocabulary where the human coders would have assigned 0 on the grounds that the vocabulary is incidental rather than constitutive of the frame.
+
+\subsection{Manual Review of High-Risk LLM Predictions}
+The validation diagnostics identified two patterns that warrant verification before commitment to the analytical dataset: a residual upper-level over-detection bias on Technical and Political, and the lower $\kappa$ on Development. Both patterns are most consequential at the upper end of the scale, where a single false positive moves aggregate summaries disproportionately. A targeted manual-review procedure was therefore designed around the highest-risk cells of the LLM output.
+
+Two categories of LLM prediction were flagged for full manual review. The first is any document predicted at Sustainability = 3 (n = 4): the frame is rare in the corpus and any false positive at the dominant level would distort downstream summaries. The second is any document predicted at Development = 3 (n = 39), which was selected on the joint grounds of the moderate validation $\kappa$ and the fact that Development = 3 is the largest single non-zero cell in the LLM output. Each flagged document was re-read against the revised codebook, with explicit attention to the two confusions identified during the human-coder reconciliation. Verdicts were either ``confirm'' or ``downgrade by one level''; no documents were upgraded, since the verified failure mode was upper-level over-detection rather than under-detection.
+
+The results align with the bias diagnostics. Three of four LLM-predicted Sustainability = 3 documents were confirmed (a UN-supported reconstruction project, a ministerial speech in the climate-resilience agenda, and a Hatay environmental restoration project on the Asi Nehri); one was downgraded. Of the 39 LLM-predicted Development = 3 documents, 24 were confirmed and 15 were downgraded---a downgrade rate of approximately 38\%, which is consistent with the lower validation $\kappa$ on this frame. The downgraded documents follow a recognisable pattern of concrete but small-scale works announcements that use developmental vocabulary heavily without meeting the codebook's threshold for a developmental-vision spine. The 16 revisions are recorded with \texttt{label\_source = llm\_then\_manual} in the final dataset. Extension of the review to Sustainability = 1 and 2 (n = 22) and Technical = 3 (n = 18) was deferred for timeline reasons.
+
+% =============================================================================
+\section{Methodology II: Models}
+% =============================================================================
+\subsection{Two Parallel Pipelines}
+The supervised modelling phase takes the 300-document annotated dataset as input and produces four-dimensional frame intensity scores for every document in the 2,139-document deployment corpus. The architecture is built around a deliberate decision to develop two methodologically distinct pipelines in parallel rather than committing early to a single model family. The first one is a sparse, fully interpretable TF-IDF + LinearSVR baseline; the second is a fine-tuned DistilBERTurk regression model. Both share an identical input format, an identical 0--1 target encoding (the 0--3 ordinal labels divided by three), and an identical evaluation protocol (five-fold cross-validation with shuffled splits, \texttt{random\_state = 42}, reporting macro mean absolute error and macro quadratic-weighted Cohen's $\kappa$). Folds are formed with \texttt{KFold(shuffle=True)} rather than province-stratified splitting; province balance across folds was checked descriptively after splitting. They differ at every other architectural level.
+
+The decision to develop both in parallel serves three substantive purposes. First, the TF-IDF pipeline establishes a strong baseline against which the transformer can be assessed; without such a baseline there is no principled way to determine whether the additional complexity of fine-tuning a transformer is warranted. Second, the parallel design permits a cross-model agreement comparison between two methodologically distinct approaches: if both pipelines produce highly correlated frame intensities on the deployment corpus despite their architectural differences, this is evidence that the underlying signal is genuine semantic structure rather than an artefact of any single model's inductive bias. Third, the TF-IDF pipeline produces a model that is fully interpretable through its linear coefficients.
+
+\subsection{TF-IDF and LinearSVR}
+The TF-IDF pipeline represents each document as the concatenation of two parallel sparse vectorisers fitted independently on the training fold. The word-level vectoriser captures unigrams and bigrams over the lowercased text, with a vocabulary cap of 20,000 features and a minimum document frequency of three; after these filters, an empirical 11,878 features remain in the word block. The character-level vectoriser uses scikit-learn's \texttt{analyzer="char\_wb"} mode with 3- to 5-character n-grams, with the same vocabulary cap and minimum-document-frequency setting. The two blocks are concatenated horizontally into a single feature matrix of approximately 31,878 dimensions per document, on which a separate LinearSVR regressor is trained for each of the four frames.
+
+Two engineering decisions matter for the resulting performance. The first one is the inclusion of character n-grams. Turkish is agglutinative: a single semantic stem produces a long sequence of morphologically distinct surface forms \textit{s\"urd\"ur\"ulebilir, s\"urd\"ur\"ulebilirlik, s\"urd\"ur\"ulebilirli\u{g}i, s\"urd\"ur\"ulebilirli\u{g}in} all derive from the same root and carry the same frame signal, but word-level TF-IDF treats them as four unrelated tokens with no shared representation. Character n-grams collapse these surface variants onto overlapping subword signatures, which allows the model to learn a single coefficient for the underlying signal rather than four independent coefficients for the surface forms. An ablation removing the character block reduced macro $\kappa$ from 0.60 to approximately 0.52, with the largest drop concentrated in the Sustainability frame, where the rare non-zero documents share morphological clusters that the word-level representation cannot exploit.
+
+The second is the response to extreme class imbalance on the Sustainability frame. Approximately 94\% of the training-set Sustainability labels are zero. Under standard unweighted training, both LinearSVR and the alternative regressors converged to a near-constant prediction strategy outputting a value close to zero for every document regardless of content which produces a low MAE (because most documents are indeed zero) but a $\kappa$ near zero (because the model has learned no discriminative structure). The resolution is inverse-frequency sample weighting, with weights $w_i = N / (K \times \mathrm{class\_count}_i)$. This formula gives Sustainability documents at level 3 a weight of roughly 20, level 2 a weight of around 10, level 1 around 5, and level 0 roughly 0.28. The training objective becomes a weighted least-squares regression that gives the rare non-zero examples gradient signal proportional to their analytical importance rather than their corpus frequency. The effect on Sustainability quadratic-weighted $\kappa$ was substantial: from 0.13 in the unweighted baseline to 0.49 in the weighted variant, which is a roughly fourfold improvement.
+
+Two alternative regressors were tested in addition to LinearSVR. Ridge regression produces results comparable to but slightly below LinearSVR (macro $\kappa$ 0.55 versus 0.60). Gradient-boosting regression was trialled but abandoned: the dense densification required to feed the sparse 31,878-dimensional matrix into the tree-based learner produced a roughly 9-million-cell training array per frame, which combined with the four-frame and five-fold structure produced a training time on the order of half an hour per fold without competitive performance gains.
+
+\subsection{DistilBERTurk Regression}
+The transformer pipeline fine-tunes the pre-trained \texttt{dbmdz/distilbert-base-turkish-cased} model with a four-output regression head, which replaces the standard masked-language-modelling head of the pretraining stage. Documents are tokenised by using the model's native WordPiece tokeniser, truncated at 256 tokens, and padded dynamically within each batch by the Hugging Face data collator. The model is trained with the AdamW optimiser at a learning rate of $3 \times 10^{-5}$ for ten epochs per fold, with a linear warmup over the first 10\% of training steps. Both the encoder weights and the regression head are updated during training; freezing the encoder produced substantially worse results in pilot experiments and was abandoned.
+
+The choice of DistilBERTurk over the more standard BERTurk-base is itself a methodological finding that is worth documenting, because it runs against the default expectation that the larger transformer should outperform the smaller distilled variant. The initial experiments used \texttt{dbmdz/bert-base-turkish-cased}, which is the standard 110M-parameter Turkish BERT model. After the baseline run produced a disappointing macro $\kappa$ of 0.35, three rounds of hyperparameter tuning were attempted: extending training from four to ten epochs (to address apparent underfitting), reducing the learning rate from $2 \times 10^{-5}$ to $1 \times 10^{-5}$ (to stabilise gradients on the small training set), and varying batch size between 8 and 32. The best BERTurk-base configuration reached macro $\kappa$ of 0.38 which is a marginal improvement that left the model substantially behind even the unweighted TF-IDF baseline (0.48).
+
+Diagnostic inspection of the BERTurk-base predictions during cross-validation suggested that the failure mode was not underfitting but a subtle form of over-parameterisation: the model's predictions on the test folds clustered tightly around the training-set means for each frame, with very little discrimination between documents. The most plausible interpretation is that the gradient signal from 240 training documents is insufficient to fit a 110M-parameter encoder to the four-output task without the encoder collapsing toward a low-variance prediction strategy. A switch to \texttt{dbmdz/distilbert-base-turkish-cased} which is a 66M-parameter distilled version of the same model, trained on the same Turkish corpus and using the same tokeniser, addressed this directly. The distilled model carries an implicit regularisation from the distillation procedure (training to match the soft probability outputs of a teacher model rather than hard labels), which appears to make it more robust to the small-training-set regime. The same hyperparameter configuration that produced macro $\kappa$ of 0.38 on BERTurk-base produced macro $\kappa$ of 0.52 on DistilBERTurk -a 35\% relative improvement obtained purely by switching to a smaller model. This finding is consistent with the broader observation in the small-data NLP literature that model capacity should be scaled to dataset size rather than to the maximum the available hardware can support.
+
+A reviewer correctly observed that the original BERTurk-base-versus-DistilBERTurk comparison confounded encoder size with the training objective, since the two were not trained under an identical loss. To isolate the two factors, both encoders were retrained under the \emph{same} per-sample inverse-frequency weighted-MSE objective, the same five-fold cross-validation, the same seed, and the same hyperparameters, so that the encoder is the only thing that differs. Under this matched protocol the gap closes almost entirely: BERTurk-base reaches a macro quadratic-weighted $\kappa$ of 0.382 against DistilBERTurk's 0.397, with the two models within one standard deviation of each other on every frame except Technical (where DistilBERTurk retains an advantage, 0.575 versus 0.443) and Sustainability (where both collapse to near-zero owing to extreme sparsity). This result revises the original interpretation: the large apparent advantage of the distilled model in the initial runs was substantially an artefact of the loss function rather than of model size, and under a matched objective the smaller model offers a modest, not a decisive, edge. The substantive justification for deploying DistilBERTurk therefore rests on its near-equal accuracy at roughly half the parameter count and double the inference throughput, rather than on a large accuracy gap.
+
+A custom weighted-MSE loss applies the same inverse-frequency sample weights used in the TF-IDF pipeline to the regression objective. The implementation overrides the Hugging Face \texttt{Trainer.compute\_loss} method to multiply the per-sample squared error by the per-sample weight before averaging, and a custom data collator passes the per-sample weights through to the loss function as part of the batch dictionary. A practical detail worth flagging is that the weights are applied only during training and not during evaluation: applying weights to the evaluation loss would produce a metric that does not reflect the true class distribution of the test set. A second practical detail is that the weighting is applied only when the imbalance ratio (the ratio of the most populous to the least populous class) exceeds five; for frames with more balanced label distributions, aggressive weighting was found to destabilise training. Under this threshold rule, weighting is applied to Sustainability (where the imbalance ratio is approximately 15) but not to Technical, Political, or Development. The weighted DistilBERTurk variant produces macro $\kappa$ of 0.53 with a substantial gain on Sustainability ($\kappa$ improved from 0.21 to 0.29) and small losses on the more balanced frames.
+
+\subsection{Cross-Validation Results}
+Table \ref{table_cv} reports the principal cross-validation metrics for the model variants developed during the project. For each fold, the training set is fitted from scratch (no warm-starting between folds), the test set is scored, and the per-frame $\kappa$ and MAE are computed. Macro values are the unweighted means across the four frames; the per-fold standard deviation of macro $\kappa$ for the leading TF-IDF variant is approximately 0.05-0.10, which indicates that the ranking is stable rather than driven by a single fortunate fold.
+
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Five-fold cross-validation results across model variants.}
+\label{table_cv}
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Macro QWK} & \textbf{Macro MAE} & \textbf{Sust. QWK} \\
+\hline\hline
+TF-IDF v2 + LinearSVR + class weights & 0.603 & 0.485 & 0.492 \\
+\hline
+TF-IDF v2 + LinearSVR (no weights) & 0.592 & 0.482 & 0.445 \\
+\hline
+TF-IDF v2 + Ridge & 0.550 & 0.497 & 0.409 \\
+\hline
+DistilBERTurk + weighted MSE & 0.533 & 0.193 & 0.285 \\
+\hline
+DistilBERTurk (no weights) & 0.519 & 0.170 & 0.206 \\
+\hline
+BERTurk-base (10 epochs, lr 1e-5) & 0.384 & 0.203 & 0.123 \\
+\hline
+BERTurk-base (baseline) & 0.354 & 0.200 & 0.126 \\
+\hline
+\end{tabular}
+\end{table*}
+
+The two leaders sit on different metrics, and the difference is genuinely informative rather than a tie-breaking artefact. Quadratic-weighted $\kappa$ measures agreement after the continuous predictions are rounded to ordinal categories. Mean absolute error, by contrast, measures distance on the underlying continuous scale: a prediction of 1.7 against a true value of 2 has lower error than a prediction of 1.4 against the same true value, regardless of whether either prediction rounds to the correct integer. DistilBERTurk produces continuous predictions that are tightly calibrated to the true values on the underlying scale (low MAE), but the calibration sometimes places the prediction on the wrong side of an integer boundary, which produces a $\kappa$ that is marginally lower than its MAE would suggest. TF-IDF produces continuous predictions that are looser on the underlying scale (higher MAE), but its predictions fall in the correct ordinal bin more often, which produces a higher $\kappa$. The pipeline therefore retains both models,for analyses using integer-rounded labels, TF-IDF is preferred; for analyses using continuous intensities, DistilBERTurk has an edge. The deployment scoring step writes both intensity vectors to the analytic file.
+
+A final observation is that the Sustainability frame remains the weakest cell in both leading models, with $\kappa$ of 0.49 (TF-IDF) and 0.29 (DistilBERTurk). The class weighting closes much but not all of the gap to the other frames, and no further engineering closed it further. The most plausible interpretation is that the ceiling on Sustainability performance is set by the absolute number of non-zero training examples (approximately 25 across the entire 300-document subset, of which roughly 20 are available in any given training fold) rather than by the modelling architecture.
+
+\subsection{Cross-Model Agreement}
+If the four frames represent genuine semantic structure in the corpus rather than artefacts of any single model's inductive bias, two architecturally distinct models trained independently on the same labels should produce strongly correlated predictions on the same documents. The TF-IDF \& LinearSVR and DistilBERTurk pipelines satisfy the ``different'' criterion comfortably the first one represents documents as sparse n-gram counts and learns a linear regression on top, while the second represents them as contextual embeddings and learns a non-linear function through a fine-tuned transformer, so a high cross-model correlation on the deployment corpus is non-trivial evidence rather than a forced result.
+
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Cross-model agreement diagnostics on the deployment corpus (n = 2,139).}
+\label{table_convergent}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Frame} & \textbf{Pearson r} & \textbf{Spearman $\rho$} & \textbf{Mean $\Delta$ (DB$-$TF)} & \textbf{RMSE} & \textbf{TF mean} & \textbf{DB mean} \\
+\hline\hline
+Political & 0.93 & 0.93 & $+0.02$ & 0.37 & 1.51 & 1.53 \\
+\hline
+Technical & 0.84 & 0.83 & $+0.33$ & 0.59 & 0.85 & 1.18 \\
+\hline
+Development & 0.74 & 0.73 & $+0.23$ & 0.50 & 1.38 & 1.60 \\
+\hline
+Sustainability & 0.69 & 0.55 & $+0.38$ & 0.55 & 0.21 & 0.58 \\
+\hline
+\end{tabular}
+\end{table*}
+
+Cross-model agreement is high across the board: Pearson correlations range from 0.69 (Sustainability) to 0.93 (Political). For Political, the agreement is near-perfect: the two models, despite their architectural differences, identify essentially the same documents as carrying high political-mobilisation content. The systematic positive Mean $\Delta$ on Technical ($+0.33$) and Sustainability ($+0.38$)-DistilBERTurk inflation on the two frames where the LLM annotation diagnostics also identified an upward bias---is consistent with a single underlying explanation. The DistilBERTurk model was trained on the LLM-extended portion of the labels, and the residual upper-level inflation in those labels appears to have propagated through supervised learning into the deployment predictions. The transformer has, in effect, inherited a fraction of the LLM annotator's calibration. The TF-IDF pipeline trained on the same labels shows the same direction of inflation but at smaller magnitude, presumably because the linear sparse representation absorbs less of the contextual nuance that drives the LLM's over-detection in the first place. The downstream analyses in Section VI use the DistilBERTurk continuous scores as the primary measure, with TF-IDF as a robustness check; period and province rankings are identical under both predictors.
+
+\subsection{Label-Provenance and Name-Redaction Robustness}
+Two robustness checks address the most consequential threats identified in the validation diagnostics: that the deployment scores might depend on the LLM-labelled portion of the training data, and that the Political frame might amount to little more than named-entity recognition.
+
+The first check retrains the supervised pipeline on the \texttt{human\_agreement} labels alone, dropping every LLM-supplied label, and correlates the resulting full-corpus predictions against the predictions from the model trained on the complete label set. If the findings were driven by the LLM labels, the two prediction sets would diverge. They do not. For Political the agreement is near-perfect (Pearson $r = 0.93$, Spearman $\rho = 0.93$) with a mean shift of only $+0.05$ on the 0--3 scale; the load-bearing frame for the paper's central claim is essentially invariant to the removal of the LLM labels. Technical shows a high correlation ($r = 0.82$) with a downward mean shift of $-0.24$, which is the expected signature of the LLM's documented upward Technical bias: when that bias is removed by training on human labels only, Technical scores fall. Development and Sustainability correlate more weakly ($r = 0.62$ and $0.68$), reflecting the smaller human-agreement samples and the genuine annotation difficulty on those frames. The substantive period and province patterns for Political are unchanged.
+
+The second check addresses the observation (Section VI-G) that 20 of the 25 highest-weighted Political tokens are proper nouns, which raises the possibility that the model recognises institutions and party leaders rather than political-mobilisation discourse as such. Party names, leader names, and the most frequently named institutions (25 terms in total, including AKP, CHP, and the names of national and municipal leaders) were redacted from both the training and the deployment text, and the Political model was retrained on the redacted corpus. The redacted predictions correlate at $r = 0.999$ with the original TF-IDF predictions and $r = 0.93$ with the original DistilBERTurk predictions, and the monthly Politicization series computed from the redacted model is effectively identical to the original (month-level correlation $r = 1.00$). The Political signal therefore does not depend on proper-noun recognition: removing every party and leader name leaves both the document-level scores and the electoral-cycle pattern essentially unchanged, which supports the interpretation that the frame captures mobilisation rhetoric rather than institutional name-spotting.
+
+% =============================================================================
+\section{Results}
+% =============================================================================
+The trained models are applied to the full 2,139-document deployment corpus. Each document receives eight scores- a TF-IDF and a DistilBERTurk intensity for each of the four frames. DistilBERTurk continuous scores rescaled to the 0-3 range serve as the primary measure; the substantive findings are robust to model choice in that period and province rankings are identical under both predictors and absolute values differ by no more than 0.30 units on the 0--3 scale. A general note on effect sizes: a coefficient of 0.20 corresponds to roughly 7\% of the scale range, and 0.50 to roughly 17\%. Several of the period and province coefficients reported below are statistically significant while remaining modest in absolute magnitude, this is typical for corpora of this size. The analyses proceed in eight stages of increasing inferential ambition.
+
+\subsection{Frame Intensity Across Electoral Periods}
+The Political frame is the most temporally responsive one of the four. Its mean intensity moves from 1.69 in the immediate post-earthquake period, rises to 1.77 during the presidential campaign, declines to 1.50 during the inter-election transition, jumps to 1.98 in the local-election campaign, and collapses to 1.25 in the post-local-election period. The peak in the local-election campaign is the highest single value any frame attains in any period, and the contraction afterwards (1.98 $\rightarrow$ 1.25, a 37\% drop) is the largest period-to-period change of any frame across the entire window.
+
+The Technical frame moves in the opposite direction. It is highest in the immediate post-earthquake period (1.38), declines through the presidential campaign (1.25) and inter-election (1.17), recovers slightly during the local-election campaign (1.26), and reaches its lowest value in the post-local-election period (0.98). The trajectory is consistent with the well-documented migration of official communication away from damage-and-assessment vocabulary as the emergency phase ends. The Development frame is more stable across the first four periods (1.58--1.80) before declining to 1.47 in period 5. The Sustainability frame remains low and approximately flat (0.53--0.62), and is never the dominant register of any period.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.1.png}
+\caption{Mean frame score by period, both models. TF-IDF in lighter shade, DistilBERTurk in darker shade. Score scale 0--3.}
+\label{fig_periods}
+\end{figure*}
+
+The monthly view (Figure \ref{fig_monthly}) reveals two patterns that the period aggregation cannot show. First, the Political peak is sharper than the period averages suggest---it spikes to a corpus-record 2.42 in December 2024, well above the period 4 mean. Second, the Technical decline is gradual rather than stepwise, with a small recovery in late 2023 that the period aggregation smooths out.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.2.png}
+\caption{Monthly evolution of discourse frames; vertical lines mark the earthquake, the two presidential rounds, and the local election.}
+\label{fig_monthly}
+\end{figure*}
+
+\subsection{Statistical Tests for Period and Province Differences}
+The descriptive patterns above are subjected to formal testing through Kruskal-Wallis non-parametric tests (with Mann-Whitney U pairwise contrasts under Bonferroni correction) and a linear mixed-effects model with source-level random intercepts.
+
+The omnibus tests reject the null of equal distributions across periods for Technical (H = 40.7, $p < 10^{-7}$), Political (H = 80.9, $p < 10^{-16}$), and Development (H = 78.7, $p < 10^{-15}$), but not for Sustainability (H = 6.0, $p = 0.20$)---which is consistent with the descriptive observation that Sustainability is approximately flat across periods. Across provinces, all four frames produce highly significant results (H between 403 and 963, $p < 10^{-85}$).
+
+The pairwise tests on Political confirm that the local-election campaign produces median intensities significantly higher than every other period (versus inter-election: corrected $p = 2.37 \times 10^{-7}$; versus post-local: $8.30 \times 10^{-11}$; versus post-quake: 0.023). On Technical, the post-quake period is significantly higher than inter-election ($p < 0.001$) and post-local ($p < 10^{-9}$), but the comparisons against the two campaign periods are not significant---Technical declines steadily rather than oscillating with the campaigns.
+
+The mixed-effects model produces consistent results. Political shows positive coefficients of $+0.20$ for the presidential campaign ($p = 0.001$) and $+0.20$ for the local-election campaign ($p = 0.004$) relative to the post-quake baseline. Technical shows negative coefficients across all post-quake periods (presidential $-0.17$, $p = 0.003$; inter-election $-0.10$, $p = 0.008$; local $-0.15$, $p = 0.017$). Development's period coefficients are not statistically distinguishable from zero in the mixed model despite the high omnibus statistic-its period variation is largely absorbed by the source-institution random intercept and is therefore better understood as a function of which institution was producing documents in each period rather than of the period itself. Sustainability shows a small but significant inter-election coefficient ($+0.12$, $p < 10^{-4}$), which reflects the steady output of the Ministry of Environment over the long inter-election window.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.3.png}
+\caption{Mixed-effects model coefficients with 95\% CIs across the four frames; reference cells: post-quake / Ad\i yaman; random intercept on source institution.}
+\label{fig_mixed}
+\end{figure*}
+
+\subsection{Province Profiles}
+Province-level mean intensities reveal three distinct profiles, but a substantive interpretation must contend with two confounds. The national category(texts produced by the Presidency, AFAD, and central ministries)shows the highest mean intensity on every frame (Political 2.39, Development 1.98, Technical 1.82, Sustainability 0.79). The first confound is document length: longer texts score systematically higher on every frame in both models ($\beta = 0.79$ for Political, 0.30 for Technical on log-transformed length), and national sources produce on average the longest texts in the corpus. Part of the national-versus-provincial gap is therefore mechanical. The mixed-effects specification absorbs some but not all of this confound.
+
+Among the three focal provinces, Kahramanmara\c{s}---the geographic epicentre, under continuous AKP control- exhibits the lowest mean Technical intensity of any geographic category at 0.64. This is counter-intuitive: one might expect the epicentre province to produce the highest volume of technical discourse on building safety and damage assessment. The empirical pattern is the opposite. The local communicative register in Kahramanmara\c{s} is dominated by political and developmental content (Political 1.12, Development 1.39), while the technical vocabulary remains comparatively quiet. Sustainability is also at the bottom of the dataset at 0.32.
+
+Hatay shows a markedly different profile. Its Sustainability mean is the highest of any province at 0.65-more than double the Kahramanmara\c{s} value-and its Technical mean (0.96) is also higher despite both provinces being among the most heavily damaged. The mixed-effects model confirms that this is not noise: the Hatay coefficient on Sustainability is $+0.44$ ($p = 0.007$), which is the only province coefficient to reach significance on this frame outside the national category. Hatay's Political mean (0.78) is the lowest of the four geographic categories. The province's distinguishing vocabulary, examined in Section VI-G, is built around water, asphalt, and infrastructure, and is concentrated in the post-local-election period when the metropolitan municipality changed to opposition (CHP) control.
+
+The second confound is the most important inferential limitation of this section. The Hatay metropolitan municipality (HBB) operates the water-and-sanitation utility HATSU directly; the Kahramanmara\c{s} metropolitan municipality does not operate an analogous utility under its own brand. The contrast between the two provinces' Technical-and-Development vocabularies therefore tracks both the partisan identity of the metropolitan administrations and a structural difference in the institutional portfolio each municipality controls. The present design cannot separate these two channels: a CHP-controlled municipality without an in-house utility, or an AKP-controlled municipality with one, would be needed to identify the partisan effect cleanly. The contrast is consistent with both interpretations, and the data do not adjudicate between them.
+
+Ad\i yaman's profile (Political 1.69, Technical 0.92, Development 1.34, Sustainability 0.34) should be read with the caveat that the Ad\i yaman municipal channel is absent from the present version of the corpus.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.4.png}
+\caption{Mean frame score by province $\times$ period, four panels. Cell values are DistilBERTurk continuous predictions on the 0--3 scale.}
+\label{fig_heatmap}
+\end{figure*}
+
+The province $\times$ period heatmap brings these patterns into sharper relief. Three observations stand out. First, the national row is consistently dark on all four frames. Second, Kahramanmara\c{s} dims sharply on Technical during the local-election campaign (0.69, the lowest cell in the Technical grid except for Ad\i yaman post-quake), even as its Political intensity rises to 1.43 in the same period. Third, Ad\i yaman's local-election cell on Political is the second-highest in the entire dataset at 3.00, comparable to national-level peaks---though the cell-size of 1 means this descriptive observation should not be over-interpreted.
+
+\subsection{Discourse Types in the Corpus}
+An unsupervised k-means clustering on the four DistilBERTurk frame intensities (k = 4, chosen by elbow inspection) identifies four distinct discourse types in the corpus. Cluster 0 (n = 604, 28\%) is a low-intensity routine-bulletin register, dominated by belediye sources (62\%) and concentrated in the inter-election (41\%) and post-local-election (31\%) periods. Cluster 1 (n = 701, 33\%) is the high-intensity political-developmental register, institutionally split between the Presidency (39\%) and the central ministries (39\%). Cluster 2 (n = 300, 14\%) is a technical-sustainability hybrid (rthe only cluster with substantively non-zero Sustainability content) dominated by the Ministry of Environment (64\%) and concentrated in the inter-election period (48\%). Cluster 3 (n = 534, 25\%) is the local-infrastructure register, overwhelmingly municipal (83\%), and absorbs the post-local Hatay output.
+
+\begin{table}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{K-means cluster profiles. Centroids on the 0--3 scale.}
+\label{table_cluster}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|l|}
+\hline
+\textbf{Cl.} & \textbf{Tech.} & \textbf{Pol.} & \textbf{Dev.} & \textbf{Sust.} & \textbf{n} & \textbf{Interpretation} \\
+\hline\hline
+0 & 0.23 & 0.98 & 0.77 & 0.18 & 604 & Routine bulletins \\
+\hline
+1 & 1.70 & 2.63 & 2.08 & 0.51 & 701 & Pol.-developmental \\
+\hline
+2 & 2.23 & 1.68 & 2.04 & 1.59 & 300 & Tech.-sustainability \\
+\hline
+3 & 0.99 & 0.63 & 1.68 & 0.57 & 534 & Local infrastructure \\
+\hline
+\end{tabular}
+\end{table}
+
+The institutional structure of the clusters is more pronounced than their temporal structure. This cuts in two directions. Read positively, it provides convergent validity for the frame measurements: the unsupervised partition recovers institutional voices that were never used as inputs to the clustering procedure, which indicates that the four frame intensities encode genuine institutional structure. Read critically, it cautions against reading the four-frame measurement as a thematic abstraction independent of who is speaking---the frames as measured are partly an indicator of ``what is being said'' and partly an indicator of ``which institution is saying it.'' The mixed-effects specification of Section VI-B partially addresses this concern by absorbing source-level variation into a random intercept.
+
+\subsection{Event Studies and Difference-in-Differences}
+The two electoral contests in the studied window---the May 2023 presidential election and the March 2024 local election---provide quasi-experimental opportunities to estimate the discourse effects of campaigns. A difference-in-differences specification compares the change in directly affected categories against the change in unaffected categories over a $\pm 120$-day window around each event. A third event, the first earthquake anniversary in February 2024, is included as a non-electoral comparison case.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{V_did_parallel_trends.png}
+\caption{Monthly mean frame score for the treated (local-government) and control groups around the 2024 local election (red dashed line) and the placebo date (dotted line). Visual inspection of the pre-treatment segments informs the parallel-trends assessment discussed in the text.}
+\label{fig_parallel_trends}
+\end{figure}
+
+The local election produces the most consequential set of results in the dataset. Local-government sources show a $+0.83$ increase in Technical discourse relative to controls ($p < 10^{-6}$)- a coefficient that is large on the 0--3 scale. The Political coefficient is $-0.32$ ($p = 0.046$) and the Sustainability coefficient is $+0.43$ ($p = 0.001$). Together these describe a reorientation of local-government communication after the local election: less political mobilisation, more technical and sustainability content. This is the pattern examined in Section VI-F- the substantive shift from campaign rhetoric to operational service-and-infrastructure communication after the change in municipal control. The presidential election produces a smaller and more focused effect: a $+0.32$ increase in Technical discourse in the three quake-affected provinces ($p < 0.001$), with no significant changes on the other frames. The earthquake anniversary registers as a moderate Political reduction ($-0.30$, $p = 0.016$) and a moderate Sustainability increase ($+0.23$, $p = 0.046$) in the affected provinces, but no significant Technical or Development shift.
+
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Difference-in-differences estimates around three events. Window: $\pm 120$ days.}
+\label{table_did}
+\centering
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Event} & \textbf{Frame} & \textbf{DiD coefficient} & \textbf{p-value} & \textbf{n} \\
+\hline\hline
+Presidential election (May 2023) & Technical & $+0.32$ & $< 0.001$ & 1156 \\
+\hline
+Presidential election (May 2023) & Political & $+0.05$ & 0.64 & 1156 \\
+\hline
+Presidential election (May 2023) & Development & $+0.09$ & 0.23 & 1156 \\
+\hline
+Presidential election (May 2023) & Sustainability & $-0.06$ & 0.28 & 1156 \\
+\hline
+Local election (March 2024) & Technical & $+0.83$ & $< 10^{-6}$ & 466 \\
+\hline
+Local election (March 2024) & Political & $-0.32$ & 0.046 & 466 \\
+\hline
+Local election (March 2024) & Development & $+0.09$ & 0.46 & 466 \\
+\hline
+Local election (March 2024) & Sustainability & $+0.43$ & 0.001 & 466 \\
+\hline
+Quake anniversary (Feb 2024) & Technical & $+0.23$ & 0.075 & 500 \\
+\hline
+Quake anniversary (Feb 2024) & Political & $-0.30$ & 0.016 & 500 \\
+\hline
+Quake anniversary (Feb 2024) & Development & $-0.18$ & 0.059 & 500 \\
+\hline
+Quake anniversary (Feb 2024) & Sustainability & $+0.23$ & 0.046 & 500 \\
+\hline
+\end{tabular}
+\end{table*}
+
+A methodological caveat applies to all three of these estimates. The identification logic of difference-in-differences relies on the parallel-trends assumption: the treated and control groups would have moved in parallel in the absence of the focal event. In the present design, the control category differs from the treated provinces along several dimensions (text length, institutional rank, target audience, communicative purpose) in ways that almost certainly imply different counterfactual trajectories. The DiD coefficients above should be read as suggestive of differential responses rather than as identified causal estimates.
+
+To probe this assumption directly, two diagnostics were run. First, monthly mean frame scores for the treated (local-government) and control groups were plotted around the local-election date so that pre-treatment parallelism could be inspected visually (Figure~\ref{fig_parallel_trends}). Second, a placebo difference-in-differences was estimated at a counterfactual ``treatment'' date in the stable inter-election window (October 2023), where no real event occurred; a well-identified design should return a near-zero, non-significant placebo coefficient. The placebo results are mixed and instructive. For the Technical frame the real local-election effect ($+0.83$, $p < 0.001$) is much larger than its placebo counterpart ($+0.23$, $p = 0.04$), which supports a genuine event effect. For the Political frame, however, the placebo coefficient is itself sizeable and significant ($-0.36$, $p < 0.001$) and of the opposite sign to the real estimate ($+0.41$), which indicates that part of the Political difference-in-differences is driven by a pre-existing divergence between the groups rather than by the election alone. The Political DiD estimate should therefore be treated with particular caution. The substantive direction of the Technical and developmental effects is robust enough across the three specifications and the pairwise contrasts in Section VI-B to be informative regardless of the strict identification status; the precise coefficient magnitudes, and the Political estimate in particular, should not be over-interpreted.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.6.png}
+\caption{Event-study windows around the earthquake, the presidential election, and the local election. Around the local election, Political and Technical move in opposite directions large enough to dominate the diagnostic.}
+\label{fig_event}
+\end{figure*}
+
+\subsection{Partisan Source Profiles}
+The post-local-election shift documented in Section VI-E is most visible in a direct comparison of HBB (CHP-controlled after March 2024) and KBB (AKP-controlled throughout). After the change in municipal control, HBB's communicative output expands substantially in volume (from 132 documents in the inter-election period to 345 in the post-local-election period) and shifts decisively toward an operational infrastructure register: the dominant vocabulary in this period centres on water (HATSU, \textit{suyu, i\c{c}me suyu}), road maintenance (\textit{asfalt, bak\i m, yol}), and neighbourhood-scale services. Political-mobilisation vocabulary recedes. KBB's communicative profile, by contrast, remains more or less constant across the same window: party-identity vocabulary, leadership references, and protocol formulae continue to dominate, with no comparable expansion of operational service vocabulary. The contrast is consistent with the institutional-portfolio confound flagged in Section VI-C (HATSU is operated directly by HBB but has no KBB equivalent) and the present three-province design cannot fully separate the partisan signature from this structural asymmetry.
+
+\subsection{Distinctive Vocabulary}
+A note on filtering policy is in order before the substantive results are reported. The supervised models trained in Section V were fitted on the unfiltered text of the training documents: personal names of ministers, mayors, and other political figures (\textit{\"ozhaseki, kurum, kiri\c{s}ci, f\i rat, \"ont\"urk, k\i l\i\c{c}daro\u{g}lu}) were retained in the input vocabulary, and so were generic honorifics (\textit{say\i n, bakan}), religious-register tokens (\textit{allah, in\c{s}allah}), numerals (\textit{bin, milyon}), and the names of non-quake places (\textit{stanbul, ankara, kayseri}). This was a deliberate choice. Filtering names at training time would have removed information that the models could legitimately use to differentiate institutional voices, and would have artificially flattened the discursive contrast between, for instance, ministerial speeches built around the responsible minister's authority and municipal bulletins built around an opposition mayor's name.
+
+A different policy is appropriate at the distinctive-vocabulary diagnostic stage. Here the analytical question is which content vocabulary characterises each period and each frame, and the names of the figures who happen to dominate each cell are an obstacle to that question rather than an answer to it. A post-hoc filter is therefore applied to the log-odds outputs before display, which removes six categories of token: personal names, generic honorifics, religious-register tokens, calendar tokens and numerals, non-quake place names, and reporting-bulletin mechanical tokens (\textit{bas\i n, haber, a\c{c}\i klad\i, belirtti}). The filter applies only to the visualisation and the prose summaries of this section; the underlying model predictions used elsewhere in the paper are computed on the unfiltered text.
+
+The period-distinctive vocabulary tracks the temporal narrative of Section VI-A cleanly. The immediate post-earthquake period is led by disaster-management terms (\textit{tespit, bar\i nma, hasarl\i, hasar, ge\c{c}ici, afet, acil, gaziantep}) with \textit{ramazan} as a period-specific marker. The presidential campaign is dominated by explicit campaign vocabulary (\textit{kampanyas\i na, kampanyam\i za, ba\c{s}vuru, m\"ulkiyet})-the prominence of \textit{yar\i s\i} and \textit{bizden} reflects the AKP's ``yar\i s\i\ bizden'' home-finance campaign slogan. The inter-election transition exhibits the climate cluster (\textit{iklim, de\u{g}i\c{s}ikli\u{g}i, \c{c}evre, s\i f\i r}) alongside the urban-renewal vocabulary (\textit{d\"on\"u\c{s}\"um, yerinde, kentsel}), which reflects the agenda-positioning of the Ministry of Environment. The local-election campaign is organised around campaign-delivery rhetoric (\textit{hak, teslim, sahiplerine, kura}) and references to the cumhur alliance. The post-local-election period is dominated by Hatay-and-HBB content (\textit{hbb, hatay, hatsu, suyu, \.{I}skenderun}) and operational maintenance vocabulary (\textit{bak\i m, dairesi, yol}).
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.7.png}
+\caption{Most distinctive tokens per electoral period; log-odds z-score against the rest of the corpus, top 10 tokens after the analysis-stage filter.}
+\label{fig_vocab_period}
+\end{figure*}
+
+The frame-distinctive vocabulary at the document level is more complicated. The Sustainability frame produces the cleanest substantive list: \textit{ye\c{s}il, at\i k, s\i f\i r, \c{c}evre, iklim, de\u{g}i\c{s}ikli\u{g}i, bah\c{c}esi, deniz}, with no surviving name or honorific tokens. The Technical and Development frames produce overlapping content lists organised around urban renewal (\textit{d\"on\"u\c{s}\"um, konut, kentsel, \c{s}ehircilik, in\c{s}a}), climate (\textit{iklim, de\u{g}i\c{s}ikli\u{g}i, \c{c}evre}), and disaster vocabulary (\textit{deprem, k\"oy, ba\u{g}\i ms\i z}). The Political frame is the methodologically informative cell. Of the 25 top-ranked tokens that distinguish high-Political documents from low-Political ones in the unfiltered output, 20 are personal names, generic honorifics, religious-register tokens, or non-content words. After the analysis-stage filter is applied, only five substantive content tokens remain: \textit{t\"urkiye, kentsel, teslim, millet, d\"on\"u\c{s}\"um}. This sparseness is itself a finding: what the model has learned to call the Political frame is, to a substantial degree, a recognition of the institutional voices and the rhetorical idiolect (first-person verbs of commitment, religious-political coupling, leadership references) characteristic of high-rank political speech rather than an independent thematic vocabulary. The same observation underwrites the cluster reading of Section VI-D.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{fig6.8.png}
+\caption{Most distinctive tokens per frame; log-odds z-score contrasting high-frame (score $\geq 2$) against low-frame (score $< 1$) documents, top 10 tokens after the analysis-stage filter.}
+\label{fig_frame_vocab}
+\end{figure*}
+
+\subsection{A Composite Politicization Index}
+A Politicization Index is constructed as the ratio of mean Political to mean Technical intensity, aggregated to monthly means. Higher values indicate that political mobilisation discourse dominates technical-resilience discourse. The ratio captures, in a single number, the central empirical question of the project: when does political framing of reconstruction prevail over technical framing, and when does the relationship invert?
+
+The monthly index is at its lowest in February 2023, the month of the earthquake itself, at 0.95 (95\% bootstrap CI [0.84, 1.07])---the only month in the window in which Technical discourse slightly exceeds Political. Confidence intervals are obtained by resampling documents within each month (2{,}000 replicates); they are reported alongside every point estimate because months with few documents yield correspondingly wide intervals. Through 2023 the index oscillates in a moderate band, rising to 1.48 in April 2023 and 1.60 in June 2023 before settling between 1.1 and 1.5 through the inter-election transition with no clear secular trend. It then climbs through the local-election window: 1.55 in February 2024, 1.69 in March 2024 (the campaign month itself), and the all-period maximum of 2.63 in April 2024 (CI [2.00, 3.54], the immediate post-local-election month, in which campaign-related rhetoric continued to dominate official communication). The April peak is well separated from the February-2023 baseline---the two confidence intervals do not overlap---and is the highest among months with adequate document counts. A comparably high December-2024 value (2.59) rests on only 17 documents and a wide interval, and is not treated as a reliable second peak. After April the index declines through the rest of 2024.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=\textwidth]{V_politicization_bootstrap_ci.png}
+\caption{Monthly Politicization Index (ratio of mean Political to mean Technical DistilBERTurk score) with 95\% bootstrap confidence intervals; the TF-IDF variant is shown alongside as a robustness check. The April-2024 peak (2.63) is annotated; the shaded bands are within-month document-resampling intervals (2{,}000 replicates). Dashed vertical lines mark the 2023 presidential and 2024 local elections.}
+\label{fig_pol_index}
+\end{figure*}
+
+This single metric captures the central empirical claim of the paper in compressed form. By the first anniversary of the disaster, the relative dominance of political over technical discourse had reached nearly three times its post-earthquake baseline. The interpretation of the April 2024 peak should be precise: a political-to-technical ratio of 2.63 means that the aggregate political content per unit of technical content across all documents published that month was 2.63 times larger---it is a ratio of monthly aggregates, not the average of per-document ratios. A parallel growth-versus-resilience index (mean Development / mean Sustainability) fluctuates without secular trend in a 3.7--7.9 band over the same window, which indicates that the relative weight of developmental over sustainability discourse is a structural feature of the institutional voices producing the corpus rather than an electoral variable. The Politicization Index is exported as a monthly series (with confidence intervals) for use in the planned panel-data phase, where it will serve as one of the principal independent variables that link discourse to investment.
+
+
+
+% =============================================================================
+\section{Conclusion}
+% =============================================================================
+This paper has asked whether the discursive architecture of Turkey's post-2023 reconstruction varies systematically across provinces and the electoral cycle, and whether that variation can be measured at scale through computational text analysis. It has answered the question in three parts: substantively, by documenting a discursive geography that responds to electoral incentives more sharply than the technical contours of damage would predict; methodologically, by developing a hybrid annotation pipeline and a parallel two-model architecture that produces convergent intensity measurements on a small Turkish-language training corpus; and technically, by showing that a carefully engineered TF-IDF baseline can match a fine-tuned BERTurk-base model on a small Turkish training set, and that under a matched training objective a smaller distilled transformer performs on par with the larger model at a fraction of the parameter count.
+
+The substantive picture converges on a single empirical claim. Political mobilisation discourse is highly responsive to the electoral calendar, with statistically significant spikes around both the presidential and local-election campaigns and a particularly sharp peak in March-April 2024. Technical-resilience discourse is concentrated in the immediate post-earthquake period and declines steadily afterwards, never recovering to its early-2023 level. Developmental discourse is high throughout but stable. Sustainability is rare across the corpus, peaks during the inter-election transition, and is geographically concentrated in Hatay. The Politicization Index peaks at 2.63 in April 2024 (95\% CI [2.00, 3.54]), nearly three times its post-earthquake baseline of 0.95. The difference-in-differences analysis identifies a particularly strong post-local-election shift in local-government communication (Technical $+0.83$, Political $-0.32$, Sustainability $+0.43$), which is consistent with the change in metropolitan control to a CHP-led administration that emphasises infrastructure and environmental services over campaign rhetoric. The k-means partition recovers four discourse archetypes whose mapping onto institutional sources provides convergent validity for the frame measurements while also revealing that the four frames are partly an indicator of which institution is speaking rather than fully institution-neutral thematic abstractions.
+
+Three confounds bear directly on the inferential reach of these results. First, document length: longer texts score systematically higher on every frame, and national-source documents are on average the longest, so part of the national-versus-provincial gap is mechanical. Second, the entanglement of institutional rank with partisan control: the Hatay-Kahramanmara\c{s} contrast is consistent with both a partisan signature and a structural difference in institutional portfolios (HATSU has no KBB equivalent), and the present three-province corpus cannot adjudicate. Third, the parallel-trends assumption underlying the DiD specifications cannot be directly tested on the present data; substantive directions are robust, precise magnitudes are not. Two further limitations: the Ad\i yaman municipal channel is absent from the present corpus, and the Sustainability frame remains the weakest cell in both supervised models (cross-validated QWK of 0.49 for TF-IDF and 0.29 for DistilBERTurk), which reflects the absolute scarcity of non-zero training examples.
+
+The patterns documented here are descriptive and correlational; the project explicitly avoids causal claims at this stage. The point is not to demonstrate that political framing of reconstruction caused a particular allocation of resources, but to establish that the discursive variation is measurable, non-trivial, and consistent with patterns the political economy literature would lead us to expect. The next phase of the project will link these monthly discourse intensities to provincial-level investment data and electoral controls in a panel framework, with the Politicization Index serving as a principal independent variable. Two further extensions are planned: the inclusion of the Ad\i yaman municipal channel and a wider provincial sample to address the partisan-versus-institutional confound, and the extension of the corpus to local press and party-channel communications.
+
+
+
+\bibliography{references}
+
+% No appendices: appendix content has been merged into the main text.
+
+
+
+\end{document}

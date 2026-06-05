@@ -1,0 +1,11 @@
+experiment,frame,mae_mean,mae_std,qwk_mean,qwk_std
+berturk_base_weighted,technical,0.2378,0.0345,0.4430,0.0865
+berturk_base_weighted,political,0.2162,0.0256,0.6385,0.1066
+berturk_base_weighted,development,0.2406,0.0193,0.3434,0.0757
+berturk_base_weighted,sustainability,0.1806,0.0083,0.1026,0.1107
+berturk_base_weighted,MEAN,0.2188,0.0,0.3819,0.0
+distilberturk_weighted,technical,0.2261,0.0380,0.5746,0.0923
+distilberturk_weighted,political,0.2179,0.0226,0.6490,0.0765
+distilberturk_weighted,development,0.2235,0.0194,0.3399,0.0801
+distilberturk_weighted,sustainability,0.2713,0.0203,0.0255,0.0082
+distilberturk_weighted,MEAN,0.2347,0.0,0.3972,0.0

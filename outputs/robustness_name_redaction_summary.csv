@@ -1,0 +1,2 @@
+frame,r_vs_tfidf,r_vs_distilbert,monthly_pattern_corr,n_redact_terms
+political,0.9414,0.8641,0.9558,25

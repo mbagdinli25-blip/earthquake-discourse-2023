@@ -1,0 +1,68 @@
+LENGTH CONFOUND CONTROL (DistilBERT 0-3 political)
+
+Length correlation per frame:
+  technical: r=+0.463
+  political: r=+0.819
+  development: r=+0.505
+  sustainability: r=+0.227
+
+--- Political ~ C(period) ---
+                                   OLS Regression Results                                  
+===========================================================================================
+Dep. Variable:     distilbert_score_political_0to3   R-squared:                       0.052
+Model:                                         OLS   Adj. R-squared:                  0.050
+Method:                              Least Squares   F-statistic:                     28.31
+Date:                             Wed, 03 Jun 2026   Prob (F-statistic):           6.33e-23
+Time:                                     12:47:24   Log-Likelihood:                -2939.2
+No. Observations:                             2071   AIC:                             5888.
+Df Residuals:                                 2066   BIC:                             5916.
+Df Model:                                        4                                         
+Covariance Type:                         nonrobust                                         
+=================================================================================================
+                                    coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------------
+Intercept                         1.6900      0.046     36.701      0.000       1.600       1.780
+C(period)[T.2_pres_campaign]      0.0781      0.088      0.887      0.375      -0.095       0.251
+C(period)[T.3_inter_election]    -0.1810      0.058     -3.104      0.002      -0.295      -0.067
+C(period)[T.4_local_campaign]     0.3565      0.100      3.573      0.000       0.161       0.552
+C(period)[T.5_post_local]        -0.4949      0.064     -7.731      0.000      -0.620      -0.369
+==============================================================================
+Omnibus:                     1113.196   Durbin-Watson:                   0.812
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              113.785
+Skew:                          -0.017   Prob(JB):                     1.96e-25
+Kurtosis:                       1.852   Cond. No.                         6.15
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+--- Political ~ C(period) + log_len ---
+                                   OLS Regression Results                                  
+===========================================================================================
+Dep. Variable:     distilbert_score_political_0to3   R-squared:                       0.680
+Model:                                         OLS   Adj. R-squared:                  0.680
+Method:                              Least Squares   F-statistic:                     879.4
+Date:                             Wed, 03 Jun 2026   Prob (F-statistic):               0.00
+Time:                                     12:47:24   Log-Likelihood:                -1813.1
+No. Observations:                             2071   AIC:                             3638.
+Df Residuals:                                 2065   BIC:                             3672.
+Df Model:                                        5                                         
+Covariance Type:                         nonrobust                                         
+=================================================================================================
+                                    coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------------
+Intercept                        -3.4432      0.085    -40.570      0.000      -3.610      -3.277
+C(period)[T.2_pres_campaign]      0.0432      0.051      0.845      0.398      -0.057       0.144
+C(period)[T.3_inter_election]    -0.0070      0.034     -0.206      0.837      -0.074       0.060
+C(period)[T.4_local_campaign]     0.1560      0.058      2.689      0.007       0.042       0.270
+C(period)[T.5_post_local]        -0.2077      0.037     -5.547      0.000      -0.281      -0.134
+log_len                           0.8697      0.014     63.728      0.000       0.843       0.896
+==============================================================================
+Omnibus:                       25.053   Durbin-Watson:                   1.471
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               19.757
+Skew:                           0.155   Prob(JB):                     5.13e-05
+Kurtosis:                       2.636   Cond. No.                         41.6
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
