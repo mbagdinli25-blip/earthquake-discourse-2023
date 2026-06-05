@@ -9,7 +9,7 @@ The project scrapes official Turkish post-earthquake communications, builds a
 discourse frames, trains two parallel supervised models, scores the full corpus,
 and runs the downstream period/province/event analyses.
 
-**Domain expert:** _[ADD NAME], _[ADD EMAIL]_
+
 
 ---
 
