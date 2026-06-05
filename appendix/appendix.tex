@@ -1,0 +1,147 @@
+% =============================================================================
+% appendix.tex  —  \input{appendix} before \end{document} in discoure.tex
+% Provides the replication appendices the reviewers asked for:
+%   A. 26-term thematic keyword list (W1 / reproducibility)
+%   B. Annotation codebook summary (reproducibility)
+%   C. LLM annotation prompt + few-shot setup (reproducibility)
+% =============================================================================
+
+\appendices
+
+% -----------------------------------------------------------------------------
+\section{Thematic Keyword List}
+\label{app:keywords}
+% -----------------------------------------------------------------------------
+The thematic keyword pass (Section~III.B) matches the following 26 terms
+case-insensitively against the full cleaned text. A document is retained if it
+matches at least one term. The list is reproduced in full here so that the
+inclusion/exclusion decision is auditable; the prose summary in the body groups
+these terms into three categories.
+
+\begin{table}[!ht]
+\renewcommand{\arraystretch}{1.2}
+\caption{The 26 earthquake-relevance keywords used at the corpus-construction
+stage. Matching is case-insensitive substring matching on the cleaned text.}
+\label{table_keywords}
+\centering
+\footnotesize
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Category} & \textbf{Terms} \\
+\hline
+Core disaster &
+\begin{tabular}[t]{@{}l@{}}
+deprem, enkaz, hasar, y\i k\i m,\\
+depremzede, 6 \c{S}ubat,\\
+kahramanmara\c{s} depremi
+\end{tabular} \\
+\hline
+Institutional / operational &
+\begin{tabular}[t]{@{}l@{}}
+AFAD, kurtarma, tahliye,\\
+acil durum, \c{c}ad\i r kent,\\
+bar\i nak, konteyner, prefabrik
+\end{tabular} \\
+\hline
+Reconstruction &
+\begin{tabular}[t]{@{}l@{}}
+kal\i c\i\ konut, ge\c{c}ici bar\i nma,\\
+yeniden yap\i m, yeniden yap\i lanma,\\
+d\"on\"u\c{s}\"um, kentsel d\"on\"u\c{s}\"um,\\
+TOK\.{I}, in\c{s}aat, altyap\i
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{table}
+
+This keyword pass should be understood as a deliberate scoping rule rather than a
+neutral recovery mechanism for all earthquake-relevant discourse. It produces a
+conservative analytic corpus centred on explicit disaster and reconstruction
+vocabulary, but it may systematically exclude texts that discuss the earthquake
+indirectly, metaphorically, or through less canonical local terminology. The
+downstream results are therefore claims about this explicitly earthquake-marked
+official discourse, not about every possible official text whose meaning may be
+connected to the disaster.
+
+% -----------------------------------------------------------------------------
+\section{Annotation Codebook (Summary)}
+\label{app:codebook}
+% -----------------------------------------------------------------------------
+The full codebook is included in the replication repository
+(\texttt{annotation/codebook.md}). The operational core is summarised below.
+Every frame is scored independently on a 0--3 ordinal scale; a single document may
+score high on more than one frame.
+
+\noindent\textbf{Decision procedure (applied per frame).}
+\begin{enumerate}
+\item \emph{Are the frame's indicators present at all?} No $\rightarrow$ 0.
+\item \emph{Is the frame central or peripheral?} Peripheral (1--2 sentences)
+      $\rightarrow$ 1.
+\item \emph{Is the frame the backbone of the text?} Covers $\sim$30--50\%
+      $\rightarrow$ 2; title + lead + conclusion all carry the frame $\rightarrow$ 3.
+\end{enumerate}
+
+\noindent\textbf{Frame definitions and indicators.}
+\begin{itemize}
+\item \textbf{Technical resilience} --- framing reconstruction through
+engineering, building codes, inspection, materials, soil surveys, and damage
+assessment. Indicators: \textit{yap\i\ denetimi, zemin et\"ud\"u, y\"onetmelik,
+kentsel d\"on\"u\c{s}\"um} (engineering sense), \textit{g\"u\c{c}lendirme, AFAD
+raporu}, numerical/technical detail.
+\item \textbf{Political mobilisation} --- framing reconstruction through electoral
+gain, partisan competition, leadership legitimacy, and national-mobilisation
+rhetoric. Indicators: \textit{milletimize s\"oz verdik, muhalefet engelledi, Say\i n
+Cumhurba\c{s}kan\i m\i z, AK Parti}, campaign pledges, ceremonial register.
+\item \textbf{Developmental transformation} --- framing the disaster as a
+development opportunity, investment, infrastructure modernisation, or regional
+growth. Indicators: \textit{yeni \c{s}ehir, modern altyap\i, yat\i r\i m, TOK\.{I}
+konutlar\i, OSB, istihdam}, project emphasis.
+\item \textbf{Sustainability} --- framing reconstruction through climate
+resilience, green building, green infrastructure, or ecological-city concepts;
+rare in this corpus. Indicators: \textit{ye\c{s}il bina, iklim diren\c{c}li,
+ekolojik, karbon ayak izi, yenilenebilir enerji, enerji verimlili\u{g}i}. Note:
+``modern, comfortable housing'' is \emph{not} sustainability absent an explicit
+environmental term.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{LLM Annotation Prompt}
+\label{app:llmprompt}
+% -----------------------------------------------------------------------------
+The 201 documents outside the human double-coded subset were annotated via the
+Anthropic API at temperature 0, with \texttt{max\_tokens} bounded and the model
+asked to return a strict JSON object with the four frame scores. The prompt
+combines (i) the codebook block reproduced verbatim below, (ii) eight few-shot
+examples drawn from the human-agreement subset, and (iii) the target document
+(truncated to a fixed character budget). The exact model identifier and API
+version used are recorded in the configuration cell of the annotation notebook
+(\texttt{annotation/LLM\_annotation.ipynb}). Two Anthropic models appear in the
+notebook by design: an initial Claude Haiku 4.5 trial used for model selection,
+and Claude Sonnet 4.5, which produced all 201 deployment-subset labels in the
+final dataset. Haiku contributed no labels to the training set
+(see Section~IV and the model-selection paragraph). The configuration cell pins
+the exact model strings (\texttt{claude-sonnet-4-5} and
+\texttt{claude-haiku-4-5-20251001}); these should match the prose verbatim.}
+
+\noindent\textbf{Codebook block (verbatim, Turkish).}
+\begin{quote}\footnotesize\ttfamily
+4 frame'i 0-3 Likert \"ol\c{c}e\u{g}inde de\u{g}erlendir. Her frame BA\u{G}IMSIZ
+de\u{g}erlendirilir; bir metin birden fazla frame'den y\"uksek puan alabilir.
+
+FRAME 1 --- TECHNICAL; FRAME 2 --- POLITICAL; FRAME 3 --- DEVELOPMENT;
+FRAME 4 --- SUSTAINABILITY (definitions and indicators as in
+Appendix~\ref{app:codebook}).
+
+KARAR REHBER\.{I}:
+1. Frame'in g\"ostergeleri VAR MI? Hay\i r $\rightarrow$ 0. Evet:
+2. Metnin MERKEZ\.{I}NDE M\.{I}? K\i y\i\ (1-2 c\"umle) $\rightarrow$ 1. Merkez:
+3. Metnin OMURGASI MI? Hay\i r ($\sim$\%30-50) $\rightarrow$ 2.
+   Evet (ba\c{s}l\i k+giri\c{s}+sonu\c{c}) $\rightarrow$ 3.
+\end{quote}
+
+\noindent The model was instructed to output only a JSON object of the form
+\texttt{\{"technical": <0-3>, "political": <0-3>, "development": <0-3>,
+"sustainability": <0-3>\}}, which was parsed and range-checked
+(0$\le v \le$3) before being written to the label store with a
+\texttt{label\_source} of \texttt{llm\_only} or, after manual review,
+\texttt{llm\_then\_manual}.
