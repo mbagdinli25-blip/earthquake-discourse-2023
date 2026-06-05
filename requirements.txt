@@ -1,0 +1,35 @@
+# Pinned dependencies for the earthquake-discourse pipeline.
+# Versions below are a known-good, mutually compatible set (Python 3.10–3.12).
+# Loosen the pins only if your environment forces it.
+
+# --- core data / numerics ---
+pandas==2.2.2
+numpy==1.26.4
+scipy==1.13.1
+
+# --- classical ML (TF-IDF + LinearSVR/Ridge/GBR baseline) ---
+scikit-learn==1.5.1
+joblib==1.4.2
+
+# --- transformer fine-tuning (BERTurk / DistilBERTurk) ---
+torch==2.3.1
+transformers==4.43.3
+datasets==2.20.0
+accelerate==0.32.1
+
+# --- downstream statistics (mixed models, DiD) ---
+statsmodels==0.14.2
+
+# --- plotting (figures) ---
+matplotlib==3.9.1
+
+# --- LLM annotation (Anthropic API) ---
+anthropic==0.34.2
+
+# --- Apple Numbers -> CSV conversion (one-off; for replication of source files) ---
+numbers-parser==4.18.5
+
+# Near-duplicate detection in the filter pipeline uses MinHash/LSH.
+# If the corpus step imports datasketch rather than a hand-rolled implementation,
+# uncomment the following and pin to the version you used:
+# datasketch==1.6.5
