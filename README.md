@@ -80,19 +80,19 @@ and runs the downstream period/province/event analyses.
 
 ## Pipeline order (end to end)
 
-1. **Scrape** — `scrapers/scraperlar.ipynb` → seven source CSVs.
-2. **Build corpus** — `corpus/corpus_creation_final.ipynb` + `corpus/filtrele.py`:
+
+1. **Build corpus** — `corpus/corpus_creation_final.ipynb` + `corpus/filtrele.py`:
    merge, exact + near-duplicate removal (MinHash/LSH, Jaccard 0.85), 26-term
    keyword pass, geographic + electoral-period assignment → `corpus_final.csv`
    (2,139 docs; 20.9 % retention from the 10,218-row raw harvest).
-3. **Annotate** — double human coding of 99 docs, codebook reconciliation on
+2. **Annotate** — double human coding of 99 docs, codebook reconciliation on
    Development, LLM annotation of the remaining 201 (Sonnet 4.5, temperature 0,
    8-shot) with manual review → `annotation/final_300.csv`. Every label carries a
    `label_source` (`human_agreement`, `human_disagreement`, `llm_only`).
-4. **Train + score** — `nlp_pipeline/train_final_models.py` fits the final TF-IDF
+3. **Train + score** — `nlp_pipeline/train_final_models.py` fits the final TF-IDF
    and DistilBERTurk models on all 300 docs; `predict_corpus_both.py` scores the
    2,139-doc corpus → `outputs/analytic_with_scores.csv`.
-5. **Analyse** — `analysis/` + the result CSVs in `outputs/`: period/province
+4. **Analyse** — `analysis/` + the result CSVs in `outputs/`: period/province
    comparisons, mixed-effects models, DiD, k-means clustering, distinctive
    vocabulary, and the Politicization Index with bootstrap CIs.
 
