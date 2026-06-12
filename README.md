@@ -28,9 +28,7 @@ and runs the downstream period/province/event analyses.
 
 ```
 .
-├── scrapers/                 # one notebook + 7 source CSVs (raw harvest)
-│   ├── scraperlar.ipynb
-│   └── *_haberler.csv, tccb_konusmalar_*.csv
+
 ├── corpus/                   # corpus construction
 │   ├── filtrele.py                  # filtering pipeline
 │   ├── corpus_creation_final.ipynb  # build + dedup + keyword + geo + period
